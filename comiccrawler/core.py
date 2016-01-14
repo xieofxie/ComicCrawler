@@ -8,11 +8,12 @@ from urllib.parse import quote, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 from urllib.error import HTTPError
 from gzip import decompress
-from worker import WorkerExit, UserWorker
+from worker import WorkerExit
 from traceback import print_exc
 from http.cookies import SimpleCookie
 from hashlib import md5
 from time import sleep
+from my_worker import MyWorker
 
 from .safeprint import safeprint
 from .error import *
@@ -27,7 +28,7 @@ default_header = {
 	"Accept-Encoding": "gzip, deflate"
 }
 
-class Mission(UserWorker):
+class Mission(MyWorker):
 	"""Create Mission object. Contains information of the mission."""
 
 	def __init__(self, title=None, url=None, episodes=None, state="INIT"):
@@ -43,6 +44,8 @@ class Mission(UserWorker):
 		self.module = get_module(url)
 		if not self.module:
 			raise ModuleError("Get module failed!")
+
+		self.json_exclude |= set(("module",))
 
 	def set(self, key, value):
 		"""Set new attribute."""

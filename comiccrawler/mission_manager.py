@@ -2,7 +2,7 @@
 
 """Mission Manager"""
 
-import json, traceback, worker
+import my_json, traceback, worker
 from os import path
 from collections import OrderedDict
 
@@ -10,30 +10,6 @@ from .safeprint import safeprint
 from .config import setting
 from .core import Mission, Episode
 from .io import content_read, content_write, is_file, backup
-
-def shallow(dict, exclude=None):
-	"""Return a shallow copy of a dict.
-
-	Arguments:
-	exclude - A list of key name which should not to copy. (default: None)
-	"""
-	new_dict = {}
-	for key in dict:
-		if not exclude or key not in exclude:
-			new_dict[key] = dict[key]
-	return new_dict
-
-class MissionPoolEncoder(json.JSONEncoder):
-	"""Encode Mission, Episode to json."""
-
-	def default(self, object):
-		if isinstance(object, Mission):
-			return shallow(vars(object), exclude=["module", "thread"])
-
-		if isinstance(object, Episode):
-			return shallow(vars(object))
-
-		return super().default(object)
 
 class MissionManager(worker.UserWorker):
 	"""Save, load missions from files"""
@@ -80,28 +56,15 @@ class MissionManager(worker.UserWorker):
 
 		content_write(
 			"~/comiccrawler/pool.json",
-			json.dumps(
-				list(self.pool.values()),
-				cls=MissionPoolEncoder,
-				indent=4,
-				ensure_ascii=False
-			)
+			my_json.dumps(list(self.pool.values()))
 		)
 		content_write(
 			"~/comiccrawler/view.json",
-			json.dumps(
-				list(self.view),
-				indent=4,
-				ensure_ascii=False
-			)
+			my_json.dumps(list(self.view))
 		)
 		content_write(
 			"~/comiccrawler/library.json",
-			json.dumps(
-				list(self.library),
-				indent=4,
-				ensure_ascii=False
-			)
+			my_json.dumps(list(self.library))
 		)
 		self.edit = False
 		safeprint("Session saved")
@@ -129,13 +92,13 @@ class MissionManager(worker.UserWorker):
 		library = []
 
 		if is_file("~/comiccrawler/pool.json"):
-			pool = json.loads(content_read("~/comiccrawler/pool.json"))
+			pool = my_json.loads(content_read("~/comiccrawler/pool.json"))
 
 		if is_file("~/comiccrawler/view.json"):
-			view = json.loads(content_read("~/comiccrawler/view.json"))
+			view = my_json.loads(content_read("~/comiccrawler/view.json"))
 
 		if is_file("~/comiccrawler/library.json"):
-			library = json.loads(content_read("~/comiccrawler/library.json"))
+			library = my_json.loads(content_read("~/comiccrawler/library.json"))
 
 		for m_data in pool:
 			# reset state
