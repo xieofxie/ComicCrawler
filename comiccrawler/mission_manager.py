@@ -2,7 +2,7 @@
 
 """Mission Manager"""
 
-import my_json, traceback, worker
+import traceback, worker
 from os import path
 from collections import OrderedDict
 
@@ -10,6 +10,7 @@ from .safeprint import safeprint
 from .config import setting
 from .core import Mission, Episode
 from .io import content_read, content_write, is_file, backup
+from .my_json import loads, dumps
 
 class MissionManager(worker.UserWorker):
 	"""Save, load missions from files"""
@@ -56,15 +57,15 @@ class MissionManager(worker.UserWorker):
 
 		content_write(
 			"~/comiccrawler/pool.json",
-			my_json.dumps(list(self.pool.values()))
+			dumps(list(self.pool.values()))
 		)
 		content_write(
 			"~/comiccrawler/view.json",
-			my_json.dumps(list(self.view))
+			dumps(list(self.view))
 		)
 		content_write(
 			"~/comiccrawler/library.json",
-			my_json.dumps(list(self.library))
+			dumps(list(self.library))
 		)
 		self.edit = False
 		safeprint("Session saved")
@@ -92,13 +93,13 @@ class MissionManager(worker.UserWorker):
 		library = []
 
 		if is_file("~/comiccrawler/pool.json"):
-			pool = my_json.loads(content_read("~/comiccrawler/pool.json"))
+			pool = loads(content_read("~/comiccrawler/pool.json"))
 
 		if is_file("~/comiccrawler/view.json"):
-			view = my_json.loads(content_read("~/comiccrawler/view.json"))
+			view = loads(content_read("~/comiccrawler/view.json"))
 
 		if is_file("~/comiccrawler/library.json"):
-			library = my_json.loads(content_read("~/comiccrawler/library.json"))
+			library = loads(content_read("~/comiccrawler/library.json"))
 
 		for m_data in pool:
 			# reset state

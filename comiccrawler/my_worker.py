@@ -2,7 +2,9 @@
 
 import worker
 
-class MyWorker(worker.UserWorker, my_json.JSONObject):
+from .my_json import JSONObject
+
+class MyWorker(worker.UserWorker, JSONObject):
 	def __init__(self):
 		super().__init__()
 		self.json_exclude |= set(("thread",))

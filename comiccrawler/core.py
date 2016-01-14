@@ -13,12 +13,12 @@ from traceback import print_exc
 from http.cookies import SimpleCookie
 from hashlib import md5
 from time import sleep
-from my_worker import MyWorker
 
 from .safeprint import safeprint
 from .error import *
 from .io import content_write, is_file
 from .config import setting
+from .my_worker import MyWorker
 
 import pprint, traceback, os
 
