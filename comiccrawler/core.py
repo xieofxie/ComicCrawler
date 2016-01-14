@@ -39,16 +39,11 @@ class Mission(MyWorker):
 
 		self.title = title
 		self.url = url
-		self.episodes = episodes
+		self.add_episodes(episodes)
 		self.state = state
 		self.module = get_module(url)
 		if not self.module:
 			raise ModuleError("Get module failed!")
-
-		# Build relation
-		if self.episodes:
-			for ep in self.episodes:
-				self.add_child(ep)
 
 		# Ignore module
 		self.json_exclude |= set(("module",))
@@ -61,6 +56,28 @@ class Mission(MyWorker):
 
 		setattr(self, key, value)
 		self.bubble("MISSION_PROPERTY_CHANGED", self)
+
+	def add_episodes(self, episodes):
+		if not episodes:
+			return
+
+		if not self.episodes:
+			self.episodes = []
+
+		url_pool = set([ep.url for ep in self.episodes])
+		new_count = 0
+
+		for ep in self.episodes:
+			if ep.url in url_pool
+				continue
+			self.episodes.append(ep)
+			self.add_child(ep)
+			new_count += 1
+
+		if new_count:
+			self.bubble("MISSION_PROPERTY_CHANGED", self)
+
+		return new_count
 
 class Episode(MyWorker):
 	"""Create Episode object. Contains information of an episode."""
@@ -306,12 +323,12 @@ def crawl(mission, savepath, thread):
 
 		except LastPageError:
 			safeprint("Episode download complete!")
-			ep.complete = True
+			ep.set("complete", True)
 			thread.bubble("DOWNLOAD_EP_COMPLETE", (mission, ep))
 
 		except SkipEpisodeError:
 			safeprint("Something bad happened, skip the episode.")
-			ep.skip = True
+			ep.set("skip", True)
 	else:
 		safeprint("Mission complete!")
 
@@ -378,8 +395,8 @@ class Crawler:
 		if not nextpageurl:
 			raise LastPageError
 
-		self.ep.current_url = nextpageurl
-		self.ep.current_page += 1
+		self.ep.set("current_url", nextpageurl)
+		self.ep.set("current_page",  self.ep.current_page + 1)
 
 	def rest(self):
 		"""Rest some time."""
@@ -554,10 +571,10 @@ def crawlpage(ep, downloader, savepath, fexp, thread):
 	To stop downloading (fatal error), raise PauseDownloadError.
 	"""
 	if not ep.current_page:
-		ep.current_page = 1
+		ep.set("current_page", 1)
 
 	if not ep.current_url:
-		ep.current_url = ep.url
+		ep.set("current_url", ep.url)
 
 	if hasattr(downloader, "getimgurls"):
 		crawler = AllPageCrawler(ep, downloader, savepath, fexp, thread)
@@ -627,19 +644,11 @@ def analyze(mission, thread=None):
 	else:
 		thread.bubble("ANALYZE_FINISHED", mission)
 
-def remove_duplicate_episode(mission):
-	"""Remove duplicate episodes."""
-	s = set()
-	cleanList = []
-	for ep in mission.episodes:
-		if ep.url not in s:
-			s.add(ep.url)
-			cleanList.append(ep)
-	mission.episodes = cleanList
-
 def analyze_info(mission, downloader, thread):
 	"""Analyze mission."""
 	safeprint("Start analyzing {}".format(mission.url))
+
+	first_time = not mission.title or not mission.episodes
 
 	mission.set("state", "ANALYZING")
 
@@ -648,7 +657,7 @@ def analyze_info(mission, downloader, thread):
 
 	html = thread.sync(grabhtml, mission.url, header, cookie=cookie)
 
-	if not mission.title:
+	if first_time:
 		mission.title = downloader.gettitle(html, mission.url)
 
 	episodes = thread.sync(downloader.getepisodelist, html, mission.url)
@@ -656,27 +665,17 @@ def analyze_info(mission, downloader, thread):
 	if not episodes:
 		raise Exception("Episode list is empty")
 
-	# Check if re-analyze
-	if mission.episodes:
-		# Insert new episodes
-		old_eps = set([ep.url for ep in mission.episodes])
-		for ep in episodes:
-			if ep.url not in old_eps:
-				mission.episodes.append(ep)
+	mission.add_episodes(episodes)
 
-		# Check update
+	if first_time:
+		mission.set("state", "ANALYZED")
+
+	else:
 		for ep in mission.episodes:
 			if not ep.skip and not ep.complete:
 				mission.set("state", "UPDATE")
 				break
 		else:
 			mission.set("state", "FINISHED")
-
-	else:
-		mission.episodes = episodes
-		mission.set("state", "ANALYZED")
-
-	# remove duplicate
-	remove_duplicate_episode(mission)
 
 	safeprint("Analyzing success!")

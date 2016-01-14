@@ -655,7 +655,7 @@ def select_episodes(parent, mission):
 		def apply(self):
 			for v in self.vs:
 				ck, ep = v
-				ep.skip = not ck.instate(("selected",))
+				ep.set("skip", not ck.instate(("selected",)))
 			return len([ i for i in mission.episodes if not i.skip ])
 
 		def toggle(self):
