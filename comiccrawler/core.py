@@ -68,11 +68,12 @@ class Mission(MyWorker):
 		url_pool = set([ep.url for ep in self.episodes])
 		new_count = 0
 
-		for ep in self.episodes:
+		for ep in episodes:
 			if ep.url in url_pool:
 				continue
 			self.episodes.append(ep)
 			self.add_child(ep)
+			url_pool.add(ep.url)
 			new_count += 1
 
 		if new_count:
@@ -85,6 +86,8 @@ class Episode(MyWorker):
 
 	def __init__(self, title=None, url=None, current_url=None, current_page=0, skip=False, complete=False):
 		"""Construct."""
+		super().__init__()
+
 		self.title = title
 		self.url = url
 		self.current_url = current_url
