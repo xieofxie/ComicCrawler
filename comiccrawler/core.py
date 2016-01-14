@@ -45,6 +45,12 @@ class Mission(MyWorker):
 		if not self.module:
 			raise ModuleError("Get module failed!")
 
+		# Build relation
+		if self.episodes:
+			for ep in self.episodes:
+				self.add_child(ep)
+
+		# Ignore module
 		self.json_exclude |= set(("module",))
 
 	def set(self, key, value):
@@ -56,7 +62,7 @@ class Mission(MyWorker):
 		setattr(self, key, value)
 		self.bubble("MISSION_PROPERTY_CHANGED", self)
 
-class Episode:
+class Episode(MyWorker):
 	"""Create Episode object. Contains information of an episode."""
 
 	def __init__(self, title=None, url=None, current_url=None, current_page=0, skip=False, complete=False):
@@ -67,6 +73,15 @@ class Episode:
 		self.current_page = current_page
 		self.skip = skip
 		self.complete = complete
+
+	def set(self, key, value):
+		"""Set new attribute."""
+
+		if not hasattr(self, key):
+			return
+
+		setattr(self, key, value)
+		self.bubble("EPISODE_PROPERTY_CHANGED", self)
 
 def format_escape(s):
 	"""Escape {} to {{}}"""
