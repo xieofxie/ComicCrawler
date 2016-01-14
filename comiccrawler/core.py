@@ -39,6 +39,7 @@ class Mission(MyWorker):
 
 		self.title = title
 		self.url = url
+		self.episodes = None
 		self.add_episodes(episodes)
 		self.state = state
 		self.module = get_module(url)
@@ -68,7 +69,7 @@ class Mission(MyWorker):
 		new_count = 0
 
 		for ep in self.episodes:
-			if ep.url in url_pool
+			if ep.url in url_pool:
 				continue
 			self.episodes.append(ep)
 			self.add_child(ep)
