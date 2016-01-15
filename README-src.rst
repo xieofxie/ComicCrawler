@@ -248,6 +248,7 @@ Todos
 -  Mission should send MISSION_PROPERTY_CHANGED event when episode status change.
 
    -  We can remove DOWNLOAD_EP_COMPLETE listener in download_manager after this.
+   -  It consumes 4 times memory if Episode inherit UserWorker.
 
 Changelog
 ---------
