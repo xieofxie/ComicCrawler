@@ -28,11 +28,12 @@ def get_episodes(html, url):
 	for match in re.finditer(pattern, html):
 		ep_url, title = match.groups()
 		s.append(Episode(title, urljoin(url, ep_url)))
-		
-	if not s:
-		s = get_episodes_ajax(html, url)
-		
-	return s
+	s_ajax = [x for x in get_episodes_ajax(html, url)]
+	
+	if len(s_ajax) > len(s):
+		return s_ajax
+	else:
+		return s
 	
 def get_episodes_ajax(html, url):
 	# http://manhua.dmzj.com/lzsyuan/
@@ -43,10 +44,11 @@ def get_episodes_ajax(html, url):
 	for i, chapter in enumerate(data["chapters"]):
 		for ep in chapter["data"]:
 			title = ep["chapter_title"]
-			ep_url = urljoin(url, "{ep[chapter_id]}.shtml?cid={comic_id}".format(ep=ep, comic_id=comic_id))
+			ep_url = url+"/{ep[chapter_id]}.shtml?cid={comic_id}".format(ep=ep, comic_id=comic_id)
 			if i == 0 and re.match("\d", title):
 				title = "第" + title
 			s.append(Episode(title, ep_url))
+			print(title, ep_url)
 	return reversed(s)
 	
 def get_images(html, url):
