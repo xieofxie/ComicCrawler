@@ -28,8 +28,10 @@ def get_episodes(html, url):
 	for match in re.finditer(pattern, html):
 		ep_url, title = match.groups()
 		s.append(Episode(title, urljoin(url, ep_url)))
-	s_ajax = [x for x in get_episodes_ajax(html, url)]
-	
+	if not s:
+		return [x for x in get_episodes_ajax(html, url)]
+	else:
+		return s
 	if len(s_ajax) > len(s):
 		return s_ajax
 	else:
